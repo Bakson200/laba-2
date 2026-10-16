@@ -1,0 +1,385 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Канбан трекера привычек</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: шапка с прогрессом, под ней четыре колонки статусов, на узком экране колонки встают друг под друга. */
+:root{
+  --bg:#f1f5f4; --surface:#ffffff; --surface-2:#e6edeb; --line:#d3ddda;
+  --fg:#15211f; --muted:#587068; --accent:#0f766e; --accent-fg:#ffffff; --danger:#b42318;
+  --focus:#0f766e;
+  --t-m1-bg:#e0ecf8; --t-m1-fg:#1f4f86;
+  --t-m2-bg:#e3f3e5; --t-m2-fg:#226234;
+  --t-m3-bg:#fbeadb; --t-m3-fg:#8a4410;
+  --t-m4-bg:#ece5f6; --t-m4-fg:#5a3a8a;
+  --t-ui-bg:#d9f1ee; --t-ui-fg:#0b5f58;
+  --t-qa-bg:#f8e3e6; --t-qa-fg:#8f2a3a;
+  --t-docs-bg:#ebebe3; --t-docs-fg:#5a5a3a;
+  --font:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1816; --surface:#17231f; --surface-2:#1e2d29; --line:#2b3d38;
+  --fg:#e5eeeb; --muted:#92aaa3; --accent:#3fbfb2; --accent-fg:#06211e; --danger:#f0766b; --focus:#3fbfb2;
+  --t-m1-bg:#1c3047; --t-m1-fg:#9cc4f0;
+  --t-m2-bg:#1c3624; --t-m2-fg:#9fdca9;
+  --t-m3-bg:#442b17; --t-m3-fg:#f0c394;
+  --t-m4-bg:#32264a; --t-m4-fg:#c9b4ee;
+  --t-ui-bg:#17393a; --t-ui-fg:#8fe0d6;
+  --t-qa-bg:#47232b; --t-qa-fg:#f0a9b4;
+  --t-docs-bg:#2e2e22; --t-docs-fg:#d4d4a8;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1816; --surface:#17231f; --surface-2:#1e2d29; --line:#2b3d38;
+  --fg:#e5eeeb; --muted:#92aaa3; --accent:#3fbfb2; --accent-fg:#06211e; --danger:#f0766b; --focus:#3fbfb2;
+  --t-m1-bg:#1c3047; --t-m1-fg:#9cc4f0;
+  --t-m2-bg:#1c3624; --t-m2-fg:#9fdca9;
+  --t-m3-bg:#442b17; --t-m3-fg:#f0c394;
+  --t-m4-bg:#32264a; --t-m4-fg:#c9b4ee;
+  --t-ui-bg:#17393a; --t-ui-fg:#8fe0d6;
+  --t-qa-bg:#47232b; --t-qa-fg:#f0a9b4;
+  --t-docs-bg:#2e2e22; --t-docs-fg:#d4d4a8;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--font);
+  padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+header.head{display:grid;gap:14px;margin-bottom:20px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{margin:4px 0 0;font-size:clamp(1.4rem,2.2vw + .9rem,2rem);line-height:1.15;font-weight:700;text-wrap:balance}
+.progress{display:grid;gap:6px;max-width:560px}
+.progress-top{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}
+.progress-top b{color:var(--fg);font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+.notice{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font-size:14px}
+.notice.err{color:var(--danger);border-color:var(--danger)}
+
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;align-items:start}
+.col{background:var(--surface-2);border-radius:12px;padding:10px;display:grid;gap:10px;min-width:0}
+.col.over{outline:2px dashed var(--accent);outline-offset:-2px}
+.col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px}
+.col-head h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.count{font:500 12px/1 var(--mono);color:var(--muted);background:var(--surface);border-radius:99px;padding:4px 8px;font-variant-numeric:tabular-nums}
+.stack{display:grid;gap:8px;min-height:12px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:6px;min-width:0}
+.card[draggable="true"]{cursor:grab}
+.card.dragging{opacity:.4}
+.card h3{margin:0;font-size:15px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.card p{margin:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;font:500 11px/1 var(--mono);padding:4px 7px;border-radius:5px;letter-spacing:.02em}
+.tag-m1{background:var(--t-m1-bg);color:var(--t-m1-fg)}.tag-m2{background:var(--t-m2-bg);color:var(--t-m2-fg)}
+.tag-m3{background:var(--t-m3-bg);color:var(--t-m3-fg)}.tag-m4{background:var(--t-m4-bg);color:var(--t-m4-fg)}
+.tag-ui{background:var(--t-ui-bg);color:var(--t-ui-fg)}.tag-qa{background:var(--t-qa-bg);color:var(--t-qa-fg)}
+.tag-docs{background:var(--t-docs-bg);color:var(--t-docs-fg)}
+.acts{display:flex;gap:4px}
+.ib,.btn{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.ib{width:30px;height:30px;padding:0;font-size:15px;line-height:1;color:var(--muted)}
+.ib:hover:not(:disabled){color:var(--fg);border-color:var(--muted)}
+.ib:disabled{opacity:.35;cursor:default}
+.btn{padding:7px 12px;font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.add{width:100%;text-align:left;border-style:dashed;background:transparent;color:var(--muted)}
+.btn.add:hover{color:var(--fg);border-color:var(--muted)}
+.linkbtn{font:inherit;font-size:12px;background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer}
+.linkbtn:hover{color:var(--fg)}
+
+.form{display:grid;gap:8px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:10px}
+.form input,.form select,.form textarea{width:100%;font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+.form textarea{resize:vertical;min-height:56px}
+.form .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.form .row .spacer{flex:1}
+.empty{padding:14px 10px;text-align:center;font-size:13px;color:var(--muted);border:1px dashed var(--line);border-radius:8px}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <div class="eyebrow">Карточка 4 · MVP</div>
+      <h1>Трекер привычек: доска задач</h1>
+    </div>
+    <div class="progress">
+      <div class="progress-top"><span>Готово задач</span><b id="progress-text">0 из 0</b></div>
+      <div class="bar" role="progressbar" aria-label="Прогресс проекта" aria-valuemin="0" aria-valuemax="100" id="progress-bar"><i id="progress-fill" style="width:0%"></i></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div id="status" class="notice" hidden></div>
+  </header>
+  <main class="board" id="board" aria-live="polite"></main>
+</div>
+
+<script>
+(function () {
+  var COLS = [
+    { id: "backlog", name: "Бэклог" },
+    { id: "doing", name: "В работе" },
+    { id: "review", name: "На проверке" },
+    { id: "done", name: "Готово" }
+  ];
+  var TAGS = {
+    m1: "Модуль 1 · Менеджер",
+    m2: "Модуль 2 · Журнал",
+    m3: "Модуль 3 · Стрики",
+    m4: "Модуль 4 · Хранение",
+    ui: "Интерфейс",
+    qa: "Тесты",
+    docs: "Защита проекта"
+  };
+
+  var db = null, canWrite = true, loaded = false;
+  var cards = [];
+  var ui = { adding: null, editing: null, confirmDel: null, draft: {}, dragId: null };
+
+  var boardEl = document.getElementById("board");
+  var statusEl = document.getElementById("status");
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function say(msg, isErr) {
+    statusEl.hidden = !msg;
+    statusEl.textContent = msg || "";
+    statusEl.className = "notice" + (isErr ? " err" : "");
+  }
+  function inCol(colId) {
+    return cards.filter(function (c) { return c.col === colId; })
+      .sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+  }
+
+  /* ---------- render ---------- */
+  function tagOptions(sel) {
+    return Object.keys(TAGS).map(function (k) {
+      return '<option value="' + k + '"' + (k === sel ? " selected" : "") + ">" + esc(TAGS[k]) + "</option>";
+    }).join("");
+  }
+
+  function formHtml(mode, colId, id) {
+    var d = ui.draft;
+    return '<form class="form" data-form="' + mode + '" data-col="' + colId + '" data-id="' + esc(id || "") + '">' +
+      '<input id="f-title" name="title" maxlength="120" placeholder="Название задачи" value="' + esc(d.title) + '" required>' +
+      '<select id="f-tag" name="tag" aria-label="Модуль">' + tagOptions(d.tag) + "</select>" +
+      '<textarea id="f-note" name="note" maxlength="300" placeholder="Описание (необязательно)">' + esc(d.note) + "</textarea>" +
+      '<div class="row">' +
+        '<button class="btn primary" type="submit">' + (mode === "edit" ? "Сохранить" : "Добавить") + "</button>" +
+        '<button class="btn" type="button" data-act="cancel">Отмена</button>' +
+        '<span class="spacer"></span>' +
+        (mode === "edit"
+          ? (ui.confirmDel === id
+              ? '<button class="btn danger" type="button" data-act="delete" data-id="' + esc(id) + '">Точно удалить?</button>'
+              : '<button class="linkbtn" type="button" data-act="ask-delete" data-id="' + esc(id) + '">Удалить</button>')
+          : "") +
+      "</div></form>";
+  }
+
+  function cardHtml(c, idx) {
+    if (ui.editing === c.id) return formHtml("edit", c.col, c.id);
+    var colIdx = COLS.findIndex(function (x) { return x.id === c.col; });
+    var dis = canWrite ? "" : " disabled";
+    return '<article class="card" draggable="' + (canWrite ? "true" : "false") + '" data-id="' + esc(c.id) + '">' +
+      "<h3>" + esc(c.title) + "</h3>" +
+      (c.note ? "<p>" + esc(c.note) + "</p>" : "") +
+      '<div class="card-foot">' +
+        '<span class="tag tag-' + esc(c.tag) + '">' + esc(TAGS[c.tag] || c.tag) + "</span>" +
+        '<div class="acts">' +
+          '<button class="ib" data-act="left" data-id="' + esc(c.id) + '" aria-label="Переместить в колонку левее"' + (colIdx === 0 ? " disabled" : dis) + ">←</button>" +
+          '<button class="ib" data-act="right" data-id="' + esc(c.id) + '" aria-label="Переместить в колонку правее"' + (colIdx === COLS.length - 1 ? " disabled" : dis) + ">→</button>" +
+          '<button class="ib" data-act="edit" data-id="' + esc(c.id) + '" aria-label="Изменить задачу"' + dis + ">✎</button>" +
+        "</div>" +
+      "</div></article>";
+  }
+
+  function render() {
+    var active = document.activeElement, activeId = active && active.id, selStart = null;
+    if (activeId && active.selectionStart != null) selStart = active.selectionStart;
+
+    var total = cards.length, done = inCol("done").length;
+    var pct = total ? Math.round(done * 100 / total) : 0;
+    document.getElementById("progress-text").textContent = done + " из " + total + " · " + pct + "%";
+    document.getElementById("progress-fill").style.width = pct + "%";
+    document.getElementById("progress-bar").setAttribute("aria-valuenow", pct);
+
+    boardEl.innerHTML = COLS.map(function (col) {
+      var list = inCol(col.id);
+      var body = list.map(cardHtml).join("");
+      if (!list.length && ui.adding !== col.id) {
+        body = '<div class="empty">' + (loaded ? "Здесь пока пусто" : "Загрузка…") + "</div>";
+      }
+      var adder = "";
+      if (canWrite) {
+        adder = ui.adding === col.id
+          ? formHtml("add", col.id)
+          : '<button class="btn add" data-act="add" data-col="' + col.id + '">+ Добавить задачу</button>';
+      }
+      return '<section class="col" data-col="' + col.id + '" aria-label="' + esc(col.name) + '">' +
+        '<div class="col-head"><h2>' + esc(col.name) + '</h2><span class="count">' + list.length + "</span></div>" +
+        '<div class="stack">' + body + "</div>" + adder + "</section>";
+    }).join("");
+
+    if (activeId) {
+      var el = document.getElementById(activeId);
+      if (el) { el.focus(); if (selStart != null && el.setSelectionRange) { try { el.setSelectionRange(selStart, selStart); } catch (e) {} } }
+    }
+  }
+
+  document.getElementById("legend").innerHTML = Object.keys(TAGS).map(function (k) {
+    return '<span class="tag tag-' + k + '">' + esc(TAGS[k]) + "</span>";
+  }).join("");
+
+  /* ---------- writes ---------- */
+  function guard(p) {
+    return p.then(function () { say(""); }).catch(function (e) {
+      say("Не удалось сохранить изменение" + (e && e.code ? " (" + e.code + ")" : "") + ". Обновите страницу и повторите.", true);
+    });
+  }
+  function orderFor(colId, beforeId, ignoreId) {
+    var list = inCol(colId).filter(function (c) { return c.id !== ignoreId; });
+    if (beforeId) {
+      var i = list.findIndex(function (c) { return c.id === beforeId; });
+      if (i >= 0) {
+        var next = list[i], prev = list[i - 1];
+        return prev ? ((prev.order || 0) + (next.order || 0)) / 2 : (next.order || 0) - 1;
+      }
+    }
+    return list.length ? (list[list.length - 1].order || 0) + 1 : 1;
+  }
+  function moveCard(id, colId, beforeId) {
+    if (!db || !canWrite) return;
+    var c = cards.find(function (x) { return x.id === id; });
+    if (!c || id === beforeId) return;
+    var order = orderFor(colId, beforeId, id);
+    if (c.col === colId && order === c.order) return;
+    c.col = colId; c.order = order; render();
+    guard(db.collection("cards").doc(id).update({ col: colId, order: order }));
+  }
+
+  /* ---------- events ---------- */
+  boardEl.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]");
+    if (!b) return;
+    var act = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+    if (act === "add") {
+      ui.adding = b.getAttribute("data-col"); ui.editing = null; ui.confirmDel = null;
+      ui.draft = { title: "", tag: "m1", note: "" }; render();
+      var t = document.getElementById("f-title"); if (t) t.focus();
+    } else if (act === "edit") {
+      var c = cards.find(function (x) { return x.id === id; }); if (!c) return;
+      ui.editing = id; ui.adding = null; ui.confirmDel = null;
+      ui.draft = { title: c.title, tag: c.tag, note: c.note || "" }; render();
+      var t2 = document.getElementById("f-title"); if (t2) t2.focus();
+    } else if (act === "cancel") {
+      ui.adding = null; ui.editing = null; ui.confirmDel = null; render();
+    } else if (act === "ask-delete") {
+      ui.confirmDel = id; render();
+    } else if (act === "delete") {
+      ui.adding = null; ui.editing = null; ui.confirmDel = null;
+      cards = cards.filter(function (x) { return x.id !== id; }); render();
+      guard(db.collection("cards").doc(id).delete());
+    } else if (act === "left" || act === "right") {
+      var cc = cards.find(function (x) { return x.id === id; }); if (!cc) return;
+      var i = COLS.findIndex(function (x) { return x.id === cc.col; }) + (act === "left" ? -1 : 1);
+      if (COLS[i]) moveCard(id, COLS[i].id, null);
+    }
+  });
+
+  boardEl.addEventListener("input", function (e) {
+    var n = e.target.name;
+    if (n === "title" || n === "tag" || n === "note") ui.draft[n] = e.target.value;
+  });
+
+  boardEl.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!db || !canWrite) return;
+    var f = e.target, mode = f.getAttribute("data-form"), colId = f.getAttribute("data-col"), id = f.getAttribute("data-id");
+    var title = (ui.draft.title || "").trim();
+    if (!title) return;
+    var data = { title: title, tag: ui.draft.tag || "m1", note: (ui.draft.note || "").trim() };
+    if (mode === "edit") {
+      var c = cards.find(function (x) { return x.id === id; });
+      if (c) { c.title = data.title; c.tag = data.tag; c.note = data.note; }
+      ui.editing = null; render();
+      guard(db.collection("cards").doc(id).update(data));
+    } else {
+      data.col = colId; data.order = orderFor(colId, null, null); data.created = Date.now();
+      ui.adding = null; render();
+      guard(db.collection("cards").add(data));
+    }
+  });
+
+  /* drag and drop (на телефоне работают кнопки со стрелками) */
+  boardEl.addEventListener("dragstart", function (e) {
+    var card = e.target.closest && e.target.closest(".card");
+    if (!card) return;
+    ui.dragId = card.getAttribute("data-id");
+    card.classList.add("dragging");
+    try { e.dataTransfer.setData("text/plain", ui.dragId); e.dataTransfer.effectAllowed = "move"; } catch (x) {}
+  });
+  boardEl.addEventListener("dragend", function () {
+    ui.dragId = null;
+    boardEl.querySelectorAll(".dragging,.over").forEach(function (n) { n.classList.remove("dragging", "over"); });
+  });
+  boardEl.addEventListener("dragover", function (e) {
+    var col = e.target.closest && e.target.closest(".col");
+    if (!col || !ui.dragId) return;
+    e.preventDefault();
+    boardEl.querySelectorAll(".over").forEach(function (n) { if (n !== col) n.classList.remove("over"); });
+    col.classList.add("over");
+  });
+  boardEl.addEventListener("drop", function (e) {
+    var col = e.target.closest && e.target.closest(".col");
+    if (!col || !ui.dragId) return;
+    e.preventDefault();
+    var colId = col.getAttribute("data-col"), beforeId = null;
+    var over = e.target.closest(".card");
+    if (over && over.getAttribute("data-id") !== ui.dragId) {
+      var r = over.getBoundingClientRect();
+      if (e.clientY < r.top + r.height / 2) beforeId = over.getAttribute("data-id");
+      else {
+        var list = inCol(colId).filter(function (c) { return c.id !== ui.dragId; });
+        var i = list.findIndex(function (c) { return c.id === over.getAttribute("data-id"); });
+        beforeId = list[i + 1] ? list[i + 1].id : null;
+      }
+    }
+    var id = ui.dragId;
+    boardEl.querySelectorAll(".dragging,.over").forEach(function (n) { n.classList.remove("dragging", "over"); });
+    ui.dragId = null;
+    moveCard(id, colId, beforeId);
+  });
+
+  /* ---------- start ---------- */
+  render();
+  if (!window.claude || !window.claude.use) { loaded = true; say("Доска доступна только при открытии в Claude.", true); render(); return; }
+
+  Promise.all([window.claude.use("db"), window.claude.use("user")]).then(function (r) {
+    db = r[0];
+    var user = r[1];
+    if (!db) { loaded = true; render(); say("Доска не подключена к хранилищу. Войдите в аккаунт и откройте страницу заново.", true); return; }
+    if (user && user.can && user.can("data.write") === false) {
+      canWrite = false;
+      say("У вас доступ только для просмотра: менять задачи нельзя.");
+    }
+    db.collection("cards").onSnapshot(function (snap) {
+      cards = snap.docs.map(function (d) { var v = d.data() || {}; v.id = d.id; return v; });
+      loaded = true; render();
+    }, function (err) {
+      loaded = true; render();
+      say("Не удалось загрузить доску" + (err && err.code ? " (" + err.code + ")" : "") + ".", true);
+    });
+  });
+})();
+</script>
+
+</body></html>
