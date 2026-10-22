@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Канбан">
+  <rect width="512" height="512" fill="#0f766e"/>
+  <rect x="96" y="276" width="88" height="140" rx="20" fill="#ffffff"/>
+  <rect x="212" y="196" width="88" height="220" rx="20" fill="#ffffff"/>
+  <rect x="328" y="116" width="88" height="300" rx="20" fill="#ffffff"/>
+</svg>

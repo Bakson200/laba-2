@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Канбан · Трекер привычек</title>
+<meta name="description" content="Канбан-доска проекта «Трекер привычек»: бэклог, работа, проверка и готово. Работает офлайн и устанавливается как приложение.">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./css/styles.css">
+<script defer src="./js/storage.js"></script>
+<script defer src="./js/board.js"></script>
+<script defer src="./js/app.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div class="head-top">
+      <div>
+        <div class="eyebrow">Карточка 4 · MVP</div>
+        <h1>Трекер привычек: доска задач</h1>
+      </div>
+      <div class="head-actions">
+        <button class="btn install" id="install-btn" type="button" hidden>Установить</button>
+        <button class="ib" id="theme-toggle" type="button" aria-label="Переключить тему" title="Переключить тему">◐</button>
+      </div>
+    </div>
+    <div class="progress">
+      <div class="progress-top"><span>Готово задач</span><b id="progress-text">0 из 0</b></div>
+      <div class="bar" role="progressbar" aria-label="Прогресс проекта" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar"><i id="progress-fill" style="width:0%"></i></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div id="status" class="notice" role="status" hidden></div>
+  </header>
+
+  <main class="board" id="board" aria-live="polite"></main>
+
+  <footer class="foot">
+    <span>Данные хранятся в этом браузере · <a href="https://github.com/Bakson200/laba-2">репозиторий</a></span>
+  </footer>
+</div>
+</body>
+</html>
