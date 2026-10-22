@@ -37,4 +37,4 @@
 
 **https://bakson200.github.io/laba-2/**
 
-Доска задач проекта: четыре колонки, теги модулей, перетаскивание карточек и прогресс. Работает офлайн и устанавливается как приложение (PWA). Исходники — в папке [`docs/`](docs/).
+Project task board: four columns, module tags, drag-and-drop cards, and progress. Works offline and can be installed as an app (PWA). Source code is in the [`docs/`](docs/) folder.
