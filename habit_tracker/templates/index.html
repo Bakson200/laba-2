@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Сегодня, {{ today.strftime("%d.%m.%Y") }} <span class="muted">({{ wd }})</span></h1>
+  {% if reminders %}
+    <p class="muted">Осталось сделать: <strong>{{ reminders|length }}</strong></p>
+    <ul class="reminders">
+      {% for r in reminders %}<li>{{ r.text() }}</li>{% endfor %}
+    </ul>
+  {% elif cards %}
+    <p class="all-done">Всё по графику на сегодня выполнено 🎉</p>
+  {% endif %}
+</section>
+
+{% if not cards %}
+  <p class="empty">Привычек пока нет. Добавьте первую в форме ниже 👇</p>
+{% endif %}
+
+<div class="grid">
+{% for c in cards %}
+  {% set h = c.habit %}
+  <article class="card">
+    <div class="card-head">
+      <h2><a href="{{ url_for('detail', habit_id=h.id) }}">{{ h.name }}</a></h2>
+      <span class="badge">{{ c.badge }}</span>
+    </div>
+    <p class="meta">{{ h.schedule_text() }}{% if h.reminder_time %} · {{ h.reminder_time.strftime("%H:%M") }}{% endif %}</p>
+    {% if h.description %}<p class="desc">{{ h.description }}</p>{% endif %}
+
+    <div class="stats">
+      <div><b>{{ c.stats.current_streak }}</b><span>текущий стрик</span></div>
+      <div><b>{{ c.stats.best_streak }}</b><span>рекорд</span></div>
+      <div><b>{{ c.stats.month_rate|round(0)|int }}%</b><span>за месяц</span></div>
+    </div>
+
+    <div class="week">
+      {% for d in c.last7 %}<span class="dot {{ d.cls }}" title="{{ d.label }}">{{ d.label }}</span>{% endfor %}
+    </div>
+
+    {% if c.scheduled_today %}
+    <form method="post" action="{{ url_for('mark', habit_id=h.id) }}" class="mark">
+      <input type="text" name="note" maxlength="200" placeholder="Заметка (необязательно)"
+             value="{{ c.entry.note if c.entry else '' }}">
+      <div class="btns">
+        <button name="status" value="done" class="btn ok {{ 'active' if c.entry and c.entry.status == 'done' }}">✓ Выполнено</button>
+        <button name="status" value="skipped" class="btn warn {{ 'active' if c.entry and c.entry.status == 'skipped' }}">✗ Пропущено</button>
+        {% if c.entry %}<button name="status" value="undo" class="btn ghost">Снять</button>{% endif %}
+      </div>
+    </form>
+    {% else %}
+      <p class="muted small">Сегодня не по графику</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('manage', habit_id=h.id, action='archive') }}" class="inline">
+      <button class="link">В архив</button>
+    </form>
+  </article>
+{% endfor %}
+</div>
+
+<section class="panel">
+  <h2>Новая привычка</h2>
+  <form method="post" action="{{ url_for('create') }}" class="form">
+    <label>Название<input name="name" required maxlength="80" placeholder="Например, зарядка"></label>
+    <label>Описание<input name="description" maxlength="200" placeholder="15 минут утром"></label>
+    <label>Желаемое время<input type="time" name="time"></label>
+    <fieldset>
+      <legend>Дни недели <span class="muted small">(ничего не выбрано = ежедневно)</span></legend>
+      {% for n in weekday_names %}
+        <label class="chip"><input type="checkbox" name="weekdays" value="{{ loop.index0 }}"><span>{{ n }}</span></label>
+      {% endfor %}
+    </fieldset>
+    <button class="btn ok">Добавить</button>
+  </form>
+</section>
+
+{% if archived %}
+<section class="panel">
+  <h2>Архив</h2>
+  <ul class="archive">
+    {% for h in archived %}
+    <li>{{ h.name }}
+      <form method="post" action="{{ url_for('manage', habit_id=h.id, action='unarchive') }}" class="inline"><button class="link">Вернуть</button></form>
+      <form method="post" action="{{ url_for('manage', habit_id=h.id, action='delete') }}" class="inline"
+            onsubmit="return confirm('Удалить привычку вместе со всей историей?')"><button class="link danger">Удалить</button></form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

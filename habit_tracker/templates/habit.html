@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ habit.name }} — Трекер привычек{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('index') }}">← Назад</a></p>
+<section class="hero">
+  <h1>{{ habit.name }}</h1>
+  <p class="meta">{{ habit.schedule_text() }}{% if habit.reminder_time %} · {{ habit.reminder_time.strftime("%H:%M") }}{% endif %}{% if habit.archived %} · в архиве{% endif %}</p>
+  {% if habit.description %}<p class="desc">{{ habit.description }}</p>{% endif %}
+  <div class="stats big">
+    <div><b>{{ stats.current_streak }}</b><span>текущий стрик</span></div>
+    <div><b>{{ stats.best_streak }}</b><span>рекорд</span></div>
+    <div><b>{{ rate|round(0)|int }}%</b><span>успешность за {{ title }}</span></div>
+    <div><b>{{ stats.total_done }}</b><span>всего выполнено</span></div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="cal-nav">
+    <a href="{{ url_for('detail', habit_id=habit.id, month=prev) }}">←</a>
+    <h2>{{ title }}</h2>
+    <a href="{{ url_for('detail', habit_id=habit.id, month=nxt) }}">→</a>
+  </div>
+  <table class="cal">
+    <thead><tr>{% for n in ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'] %}<th>{{ n }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for week in weeks %}<tr>
+      {% for c in week %}
+        {% if c %}<td class="{{ c.cls }}{{ ' today' if c.today }}" {% if c.note %}title="{{ c.note }}"{% endif %}>{{ c.n }}{% if c.note %}<i>•</i>{% endif %}</td>
+        {% else %}<td class="blank"></td>{% endif %}
+      {% endfor %}
+    </tr>{% endfor %}
+    </tbody>
+  </table>
+  <p class="legend small muted"><span class="sw done"></span>выполнено <span class="sw skipped"></span>пропущено <span class="sw missed"></span>не отмечено <span class="sw off"></span>не по графику</p>
+</section>
+
+{% if entries %}
+<section class="panel">
+  <h2>Последние заметки</h2>
+  <ul class="notes">
+    {% for e in entries %}<li><span class="muted">{{ e.day.strftime("%d.%m") }}</span> {{ e.note }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

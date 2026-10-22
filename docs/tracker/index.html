@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Трекер привычек</title>
+<meta name="description" content="Трекер полезных привычек: отметки, календарь, стрики и напоминания. Работает офлайн и устанавливается как приложение.">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="./css/styles.css">
+<script defer src="./js/dates.js"></script>
+<script defer src="./js/habits.js"></script>
+<script defer src="./js/checkins.js"></script>
+<script defer src="./js/stats.js"></script>
+<script defer src="./js/storage.js"></script>
+<script defer src="./js/app.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topbar">
+    <a class="back" href="../">← Канбан-доска</a>
+    <div class="top-actions">
+      <button class="btn install" id="install-btn" type="button" hidden>Установить</button>
+      <button class="ib" id="theme-toggle" type="button" aria-label="Переключить тему" title="Переключить тему">◐</button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">Карточка 4 · MVP</div>
+    <div class="hero-row">
+      <div>
+        <h1>Трекер привычек</h1>
+        <p class="today-line" id="today-line"></p>
+      </div>
+      <button class="btn primary add-btn" type="button" data-act="open-add">+ Новая привычка</button>
+    </div>
+
+    <div class="progress">
+      <div class="progress-top"><span>Сегодня по графику</span><b id="today-text">0 из 0</b></div>
+      <div class="bar" role="progressbar" aria-label="Прогресс за сегодня" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="today-bar"><i id="today-fill" style="width:0%"></i></div>
+    </div>
+
+    <div id="status" class="notice" role="status" hidden></div>
+  </header>
+
+  <section id="reminders" class="reminders" hidden></section>
+
+  <main id="list-view">
+    <div class="grid" id="habit-grid"></div>
+    <p class="empty" id="empty-state" hidden>
+      Привычек пока нет. Нажми «+ Новая привычка» или
+      <button class="linkbtn" type="button" data-act="add-examples">добавь примеры</button>.
+    </p>
+
+    <section class="panel archive" id="archive-panel" hidden>
+      <h2 id="archive-title">Архив</h2>
+      <ul id="archive-list"></ul>
+    </section>
+  </main>
+
+  <main id="detail-view" hidden>
+    <button class="linkbtn back-btn" type="button" data-act="back">← Все привычки</button>
+
+    <header class="detail-head">
+      <div>
+        <div class="eyebrow">Привычка</div>
+        <h2 id="detail-title"></h2>
+        <p class="meta" id="detail-meta"></p>
+        <p class="desc" id="detail-desc"></p>
+      </div>
+      <span class="badge big" id="detail-badge"></span>
+    </header>
+
+    <div class="stats big" id="detail-stats"></div>
+
+    <section class="panel calendar-panel">
+      <div class="cal-head">
+        <button class="ib" type="button" data-act="prev-month" aria-label="Предыдущий месяц">←</button>
+        <h3 id="cal-title"></h3>
+        <button class="ib" type="button" data-act="next-month" aria-label="Следующий месяц">→</button>
+      </div>
+      <div class="cal-weekdays" id="cal-weekdays"></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span><i class="sw done"></i> выполнено</span>
+        <span><i class="sw skipped"></i> пропущено</span>
+        <span><i class="sw missed"></i> пропуск</span>
+        <span><i class="sw off"></i> не по графику</span>
+      </div>
+      <p class="rate-line" id="cal-rate"></p>
+    </section>
+
+    <section class="panel day-panel" id="day-panel" hidden>
+      <h3 id="day-title"></h3>
+      <div class="mark">
+        <input id="day-note" maxlength="200" placeholder="Заметка к дню (необязательно)">
+        <div class="btns">
+          <button class="btn ok" type="button" data-act="mark-day" data-status="done">✓ Выполнено</button>
+          <button class="btn warn" type="button" data-act="mark-day" data-status="skipped">✗ Пропущено</button>
+          <button class="btn ghost" type="button" data-act="mark-day" data-status="undo">Снять</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel notes-panel">
+      <h3>Заметки</h3>
+      <ul id="notes-list"></ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Данные хранятся в этом браузере · <a href="https://github.com/Bakson200/laba-2">репозиторий</a></span>
+  </footer>
+</div>
+
+<dialog class="dialog" id="habit-dialog">
+  <form id="habit-form">
+    <div class="dialog-head">
+      <h2 id="dialog-title">Новая привычка</h2>
+      <button class="ib" type="button" data-act="close-dialog" aria-label="Закрыть">✕</button>
+    </div>
+
+    <label class="field">Название
+      <input name="name" maxlength="80" required placeholder="Например, зарядка">
+    </label>
+    <label class="field">Описание
+      <input name="description" maxlength="200" placeholder="15 минут утром">
+    </label>
+    <label class="field">Желаемое время
+      <input type="time" name="time">
+    </label>
+
+    <fieldset class="days-field">
+      <legend>Дни недели <span class="muted small">(ничего не выбрано = ежедневно)</span></legend>
+      <div class="chips-days" id="dialog-days"></div>
+    </fieldset>
+
+    <div class="dialog-actions">
+      <button class="btn primary" type="submit">Сохранить</button>
+      <button class="btn" type="button" data-act="close-dialog">Отмена</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>

@@ -109,6 +109,7 @@ h1{margin:4px 0 0;font-size:clamp(1.4rem,2.2vw + .9rem,2rem);line-height:1.15;fo
 .btn.add{width:100%;text-align:left;border-style:dashed;background:transparent;color:var(--muted)}
 .btn.add:hover{color:var(--fg);border-color:var(--muted)}
 .btn.install{font-size:13px;padding:6px 10px;border-color:var(--accent);color:var(--accent);background:transparent;font-weight:600}
+.btn.tracker-link{font-size:13px;padding:6px 10px;border-color:var(--accent);background:var(--accent);color:var(--accent-fg);font-weight:600;text-decoration:none;display:inline-flex;align-items:center}
 .linkbtn{font:inherit;font-size:12px;background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer}
 .linkbtn:hover{color:var(--fg)}
 
