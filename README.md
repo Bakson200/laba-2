@@ -1,19 +1,3 @@
-# Трекер привычек · Лабораторная работа №2
-
-**Живые версии:**
-- 🎯 [Трекер привычек](https://bakson200.github.io/laba-2/tracker/) — PWA, работает офлайн
-- 🗂 [Канбан-доска проекта](https://bakson200.github.io/laba-2/) — план по модулям
-
-**Python-версия (Flask + JSON):**
-
-```bash
-pip install -r requirements.txt
-python -m habit_tracker.web        # http://127.0.0.1:5000
-python -m unittest discover -s habit_tracker/tests -t .
-```
-
----
-
 # This is my second work. Enjoy watching!
 
 ## Here is the MVP for my project:
@@ -54,3 +38,17 @@ python -m unittest discover -s habit_tracker/tests -t .
 **https://bakson200.github.io/laba-2/**
 
 Project task board: four columns, module tags, drag-and-drop cards, and progress. Works offline and can be installed as an app (PWA). Source code is in the [`docs/`](docs/) folder.
+
+# The application itself is below.
+
+- 🎯 [Habit Tracker](https://bakson200.github.io/laba-2/tracker/) — PWA, works offline
+
+**Python version (Flask + JSON):**
+
+```bash
+pip install -r requirements.txt
+python -m habit_tracker.web        # http://127.0.0.1:5000
+python -m unittest discover -s habit_tracker/tests -t .
+```
+
+---
